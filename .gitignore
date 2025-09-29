@@ -1,4 +1,7 @@
 .idea/*
-.vdcode
+.vscode
 .env
 .env.*
+db.sqlite3
+.idea/misc.xml
+.idea/*.*
