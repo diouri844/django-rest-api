@@ -1,12 +1,14 @@
 # users/views.py
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 
-from .serializers import UserRegistrationSerializer, UserSerializer
+from users.models import Customer
+
+from .serializers import UserRegistrationSerializer, UserSerializer , CustomerSerializer
 
 
 @api_view(['POST'])
@@ -46,6 +48,53 @@ def register(request):
         }, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsAdminUser])  # Anyone can login
+def create_customer(request):
+    """
+    Create a new customer profile (admin only)
+    POST /api/users/create_customer/
+    Body: {
+        "user": 1,
+        "role": "customer",
+        "user_type": "individual",
+        "phone": "1234567890",
+        "address": "123 Main St",
+        "company_name": "",
+        "ice": ""
+    }
+    """
+    serializer = CustomerSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        customer = serializer.save()
+        return Response({
+            'message': 'Customer profile created successfully',
+            'customer': CustomerSerializer(customer).data
+        }, 
+        status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def list_customers(request):
+    """
+    List all customer profiles (admin only)
+    GET /api/users/list_customers/
+    """
+    try:
+        customers = Customer.objects.all()
+        serializer = CustomerSerializer(customers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            'error': 'An error occurred while fetching customers'
+        }, 
+    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
