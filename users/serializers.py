@@ -2,6 +2,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
+from users.models import Customer
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password2 = serializers.CharField(write_only=True, min_length=8)
@@ -45,3 +47,14 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name']
+
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = '__all__'
+        extra_kwargs = {
+            'ice': {'required': False},
+            'company_name': {'required': False},
+        }
